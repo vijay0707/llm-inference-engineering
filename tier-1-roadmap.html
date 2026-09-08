@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tier 1 · LLM Inference — Operator Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0e0c;
+    --bg-elev: #141613;
+    --bg-card: #1a1d19;
+    --border: #2a2e27;
+    --border-bright: #3d4338;
+    --text: #e8e6df;
+    --text-dim: #8a8a82;
+    --text-faint: #5a5a55;
+    --accent: #d4ff3a;
+    --accent-dim: #889c20;
+    --done: #4a6f2a;
+    --warn: #e8a544;
+    --danger: #d4533a;
+    --hinge: #6ac5e8;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --serif: 'Fraunces', Georgia, serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1.55;
+    min-height: 100vh;
+  }
+
+  body {
+    background-image:
+      radial-gradient(ellipse at top right, rgba(212, 255, 58, 0.04), transparent 60%),
+      radial-gradient(ellipse at bottom left, rgba(212, 255, 58, 0.02), transparent 50%);
+    padding-bottom: 80px;
+  }
+
+  ::selection { background: var(--accent); color: var(--bg); }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .wrap { max-width: 880px; margin: 0 auto; }
+
+  /* HEADER */
+  .header {
+    border-bottom: 1px solid var(--border);
+    padding: 28px 40px 24px;
+    position: relative;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 40px;
+    width: 120px; height: 1px;
+    background: var(--accent);
+  }
+  .brand-tag {
+    font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--text-faint); margin-bottom: 6px;
+  }
+  .brand-title {
+    font-family: var(--serif); font-weight: 900; font-size: 30px;
+    letter-spacing: -0.02em; line-height: 1;
+  }
+  .brand-sub { color: var(--text-dim); margin-top: 10px; font-size: 12.5px; }
+
+  /* OVERALL BAR */
+  .overall {
+    padding: 22px 40px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  }
+  .overall-stat { display: flex; flex-direction: column; gap: 2px; }
+  .overall-num { font-family: var(--serif); font-weight: 900; font-size: 26px; color: var(--accent); line-height: 1; }
+  .overall-lab { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-faint); }
+  .obar { flex: 1; min-width: 180px; height: 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; }
+  .obar > span { display: block; height: 100%; background: linear-gradient(90deg, var(--accent-dim), var(--accent)); width: 0; transition: width .35s ease; }
+
+  /* SECTIONS */
+  .section { padding: 30px 40px; border-bottom: 1px solid var(--border); }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 18px; gap: 16px; flex-wrap: wrap; }
+  .section-title { font-family: var(--serif); font-weight: 600; font-size: 19px; display: flex; align-items: baseline; gap: 12px; }
+  .section-title .num { font-family: var(--mono); font-size: 11px; color: var(--accent-dim); font-weight: 500; }
+  .section-meta { font-size: 11px; color: var(--text-faint); }
+
+  /* PHASE MAP */
+  .map-row {
+    display: grid; grid-template-columns: 26px 1fr auto; gap: 14px; align-items: center;
+    padding: 9px 0; border-top: 1px dashed var(--border);
+  }
+  .map-row:first-child { border-top: none; }
+  .map-n { font-size: 12px; color: var(--text-faint); }
+  .map-mid { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .map-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .map-name.done { color: var(--text-dim); text-decoration: line-through; text-decoration-color: var(--done); }
+  .map-bar { width: 90px; height: 5px; background: var(--bg-card); border-radius: 20px; overflow: hidden; flex-shrink: 0; }
+  .map-bar > span { display: block; height: 100%; background: var(--accent); width: 0; transition: width .3s ease; }
+  .tag { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; padding: 2px 7px; border-radius: 3px; border: 1px solid var(--border-bright); color: var(--text-dim); flex-shrink: 0; }
+  .tag.hinge { color: var(--hinge); border-color: var(--hinge); }
+  .tag.fast { color: var(--accent-dim); }
+  .tag.systems { color: var(--warn); border-color: var(--warn); }
+
+  /* PHASE CARDS */
+  .phase {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px 18px; margin-bottom: 12px;
+  }
+  .phase.hinge-card { border-color: var(--hinge); box-shadow: inset 3px 0 0 var(--hinge); }
+  .phase-top { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+  .phase-name { font-weight: 500; }
+  .phase-name .pn { color: var(--text-faint); margin-right: 8px; font-size: 12px; }
+  .phase-blurb { color: var(--text-dim); font-size: 12.5px; margin: 8px 0 12px; }
+  .res {
+    background: var(--bg-elev); border: 1px solid var(--border); border-radius: 6px;
+    padding: 11px 13px; margin-bottom: 12px;
+  }
+  .res-title { font-size: 12.5px; font-weight: 500; }
+  .res-title .star { color: var(--accent); margin-right: 5px; }
+  .res-src { font-size: 11px; color: var(--text-faint); margin-top: 1px; }
+  .res-why { font-size: 11.5px; color: var(--text-dim); margin-top: 6px; }
+  .res-link { display: inline-block; margin-top: 8px; font-size: 11px; color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; }
+  .res-link:hover { border-bottom-color: var(--accent); }
+  .checks { display: flex; gap: 10px; flex-wrap: wrap; }
+  .chk {
+    display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+    font-size: 11.5px; color: var(--text-dim); padding: 6px 11px;
+    border: 1px solid var(--border-bright); border-radius: 5px; user-select: none;
+    background: var(--bg-elev); transition: all .15s ease;
+  }
+  .chk:hover { border-color: var(--text-dim); }
+  .chk .box { width: 13px; height: 13px; border: 1px solid var(--text-faint); border-radius: 3px; display: grid; place-items: center; font-size: 10px; line-height: 1; }
+  .chk.on { color: var(--text); border-color: var(--done); }
+  .chk.on .box { background: var(--done); border-color: var(--done); color: var(--text); }
+  .chk.applied.on { border-color: var(--accent); }
+  .chk.applied.on .box { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+
+  /* ARTIFACTS */
+  .art { display: flex; gap: 12px; align-items: flex-start; padding: 13px 0; border-top: 1px dashed var(--border); }
+  .art:first-child { border-top: none; }
+  .art-toggle {
+    flex-shrink: 0; width: 22px; height: 22px; border: 1px solid var(--border-bright);
+    border-radius: 5px; cursor: pointer; display: grid; place-items: center; font-size: 12px;
+    background: var(--bg-card); color: transparent; transition: all .15s ease;
+  }
+  .art-toggle.on { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  .art-body { min-width: 0; }
+  .art-name { font-weight: 500; font-size: 13px; }
+  .art-name.on { color: var(--text-dim); }
+  .art-phase { font-size: 10px; color: var(--accent-dim); letter-spacing: 0.08em; text-transform: uppercase; margin-left: 8px; }
+  .art-desc { font-size: 11.5px; color: var(--text-dim); margin-top: 3px; }
+
+  /* RULES */
+  .rule { display: flex; gap: 11px; padding: 9px 0; font-size: 12.5px; color: var(--text-dim); border-top: 1px dashed var(--border); }
+  .rule:first-child { border-top: none; }
+  .rule b { color: var(--text); font-weight: 500; }
+  .rule .mk { color: var(--accent); flex-shrink: 0; }
+  .rule.guard .mk { color: var(--warn); }
+
+  .foot { padding: 24px 40px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .reset { background: none; border: 1px solid var(--border-bright); color: var(--text-faint); font-family: var(--mono); font-size: 11px; padding: 7px 13px; border-radius: 5px; cursor: pointer; }
+  .reset:hover { border-color: var(--danger); color: var(--danger); }
+  .saved { font-size: 10.5px; color: var(--text-faint); }
+
+  @media (max-width: 560px) {
+    .header, .overall, .section, .foot { padding-left: 22px; padding-right: 22px; }
+    .header::before { left: 22px; }
+    .map-bar { width: 60px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="header">
+    <div class="brand-tag">Operator Log · Inference Layer</div>
+    <div class="brand-title">Tier 1 · LLM Inference</div>
+    <div class="brand-sub">Foundation &rarr; inference core. Layered on the agentic track, not a new track. ~6 weeks at low-intensity cadence.</div>
+  </header>
+
+  <div class="overall">
+    <div class="overall-stat"><span class="overall-num" id="ov-phases">0/9</span><span class="overall-lab">Phases complete</span></div>
+    <div class="overall-stat"><span class="overall-num" id="ov-consumed">0</span><span class="overall-lab">Consumed</span></div>
+    <div class="overall-stat"><span class="overall-num" id="ov-applied">0</span><span class="overall-lab">Applied</span></div>
+    <div class="obar"><span id="ov-bar"></span></div>
+  </div>
+
+  <!-- PHASE MAP -->
+  <section class="section">
+    <div class="section-head">
+      <h2 class="section-title"><span class="num">01</span>Phase map</h2>
+      <span class="section-meta">Phase 2 is the hinge &middot; go slow there</span>
+    </div>
+    <div id="map"></div>
+  </section>
+
+  <!-- PHASES -->
+  <section class="section">
+    <div class="section-head">
+      <h2 class="section-title"><span class="num">02</span>Phases &middot; one primary resource each</h2>
+      <span class="section-meta">Two-checkbox rule: consumed &ne; applied</span>
+    </div>
+    <div id="phases"></div>
+  </section>
+
+  <!-- ARTIFACTS -->
+  <section class="section">
+    <div class="section-head">
+      <h2 class="section-title"><span class="num">03</span>Flagship artifacts</h2>
+      <span class="section-meta">These three feed the serve-and-optimize write-up</span>
+    </div>
+    <div id="artifacts"></div>
+  </section>
+
+  <!-- RULES -->
+  <section class="section">
+    <div class="section-head">
+      <h2 class="section-title"><span class="num">04</span>Standing rules</h2>
+      <span class="section-meta">Re-read Sunday</span>
+    </div>
+    <div class="rule"><span class="mk">&rsaquo;</span><span><b>One resource per week.</b> A phase isn't open until the last one is applied, not just consumed.</span></div>
+    <div class="rule"><span class="mk">&rsaquo;</span><span><b>Consumed &ne; applied.</b> "Applied" ticks only when the matching artifact or notebook exists.</span></div>
+    <div class="rule"><span class="mk">&rsaquo;</span><span><b>6, 7, 8 are your DE turf.</b> Move fast &mdash; roofline, TTFT/TPOT and cost math are pipeline thinking relabelled.</span></div>
+    <div class="rule guard"><span class="mk">&#9888;</span><span><b>Phase 2 guardrail.</b> Understanding attention's memory behaviour is Tier 1. Reimplementing FlashAttention is deferred Tier 3. When you feel the pull to dig, move to Phase 3.</span></div>
+    <div class="rule guard"><span class="mk">&#9888;</span><span><b>Deferred, deliberately.</b> Distributed inference, CUDA/Triton kernels, MoE internals, P/D disaggregation stay closed unless you switch specialization to inference infra.</span></div>
+  </section>
+
+  <div class="foot">
+    <button class="reset" id="reset">Reset progress</button>
+    <span class="saved" id="saved">Saved locally</span>
+  </div>
+
+</div>
+
+<script>
+const STORE = 'inference_tier1_state_v1';
+
+const PHASES = [
+  { n:0, id:'p0', name:'Forward-pass mental model', tag:'fast',
+    blurb:'Tensors, matmul, shapes, one full forward pass. Stop before training loops \u2014 inference never backprops.',
+    res:{ title:"Let's build GPT + nanoGPT", src:'Andrej Karpathy \u00b7 YouTube / GitHub',
+      why:'Best forward-pass-to-transformer path for someone who codes. Build it, don\u2019t just watch.',
+      link:'https://github.com/karpathy/nanoGPT', ess:true } },
+  { n:1, id:'p1', name:'Transformer architecture', tag:'core',
+    blurb:'Tokenize \u2192 embed \u2192 block (attn + MLP + residual + norm) \u2192 stack \u2192 logits \u2192 softmax.',
+    res:{ title:'The Illustrated Transformer', src:'Jay Alammar',
+      why:'Re-read as reference after Karpathy to lock the block anatomy.',
+      link:'https://jalammar.github.io/illustrated-transformer/', ess:false } },
+  { n:2, id:'p2', name:'Attention mechanism', tag:'hinge',
+    blurb:'Q/K/V, scaled dot-product, multi-head, causal mask \u2014 and why it\u2019s O(n\u00b2) and makes decode memory-bandwidth-bound.',
+    res:{ title:'Neural networks / transformers series', src:'3Blue1Brown',
+      why:'Best visual intuition for attention. Spend real time here \u2014 everything downstream hangs off it.',
+      link:'https://www.3blue1brown.com/topics/neural-networks', ess:true } },
+  { n:3, id:'p3', name:'Generation & decoding', tag:'fast',
+    blurb:'Greedy, temperature, top-k, top-p, beam, repetition penalty, stopping.',
+    res:{ title:'How to generate text', src:'Hugging Face blog',
+      why:'Makes the one-token-at-a-time cost structure concrete.',
+      link:'https://huggingface.co/blog/how-to-generate', ess:false } },
+  { n:4, id:'p4', name:'Prefill vs decode', tag:'core',
+    blurb:'Two phases: prefill compute-bound, decode memory-bandwidth-bound. Everything now hangs off Phase 2.',
+    res:{ title:'A Practical Guide to LLM Inference at Scale', src:'The Neural Maze',
+      why:'Walks a single request from basics up through prefill/decode and PagedAttention.',
+      link:'https://theneuralmaze.substack.com/p/a-practical-guide-to-llm-inference', ess:true } },
+  { n:5, id:'p5', name:'KV cache', tag:'core',
+    blurb:'What\u2019s cached, memory math, growth with context / batch, GQA / MQA.',
+    res:{ title:'Inference Engineering \u2014 KV cache & techniques', src:'inferenceengineering.tech',
+      why:'Interactive calculators + quizzes; fits active recall. Then build your own calculator.',
+      link:'https://inferenceengineering.tech/learn/', ess:false } },
+  { n:6, id:'p6', name:'Performance fundamentals', tag:'systems',
+    blurb:'Compute vs memory-bound, arithmetic intensity, roofline, latency / throughput / batching.',
+    res:{ title:'The Engineering Guide to Efficient LLM Inference', src:'Towards AI',
+      why:'Frames inference as a memory-bandwidth battle + the roofline model. Your DE turf.',
+      link:'https://pub.towardsai.net/the-engineering-guide-to-efficient-llm-inference-metrics-memory-and-mathematics-3aead91c99cc', ess:false } },
+  { n:7, id:'p7', name:'Benchmarking', tag:'systems',
+    blurb:'TTFT, TPOT, ITL, tokens/sec, concurrency, GPU utilization.',
+    res:{ title:'Inference Engineering \u2014 metrics & benchmarking', src:'inferenceengineering.tech',
+      why:'Grounds the exact numbers your flagship write-up will report.',
+      link:'https://inferenceengineering.tech/learn/', ess:false } },
+  { n:8, id:'p8', name:'Cost engineering', tag:'systems',
+    blurb:'GPU-hour economics, batching trade-offs, quantization & routing economics.',
+    res:{ title:'LLM Engineering Guide: 45 concepts', src:'slavadubrov.github.io',
+      why:'Cost math: routing, cascading, and overtraining smaller models for serving lifecycle.',
+      link:'https://slavadubrov.github.io/blog/2026/03/13/llm-engineering-guide/', ess:false } }
+];
+
+const ARTIFACTS = [
+  { id:'a2', name:'Minimal attention head', phase:'Phase 2', desc:'Rebuild one attention head in a notebook, annotated \u2014 the "applied" proof for the hinge phase.' },
+  { id:'a5', name:'KV-cache memory calculator', phase:'Phase 5', desc:'Compute cache size vs context length, batch, and GQA groups.' },
+  { id:'a7', name:'TTFT / TPOT benchmark harness', phase:'Phase 7', desc:'Measure the latency metrics that feed the serve-and-optimize triage-agent write-up.' }
+];
+
+function loadState() {
+  try { return JSON.parse(localStorage.getItem(STORE)) || {}; }
+  catch(e){ return {}; }
+}
+let state = loadState();
+if (!state.phases) state.phases = {};   // { p0: {consumed:bool, applied:bool} }
+if (!state.arts) state.arts = {};       // { a2: bool }
+
+function save() {
+  localStorage.setItem(STORE, JSON.stringify(state));
+  const s = document.getElementById('saved');
+  s.textContent = 'Saved ' + new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+}
+
+function ph(id){ return state.phases[id] || {consumed:false, applied:false}; }
+function phDone(id){ const p = ph(id); return p.consumed && p.applied; }
+
+function renderMap() {
+  const el = document.getElementById('map');
+  el.innerHTML = PHASES.map(p => {
+    const s = ph(p.id);
+    const pct = ((s.consumed?1:0) + (s.applied?1:0)) / 2 * 100;
+    return `<div class="map-row">
+      <span class="map-n">${String(p.n).padStart(2,'0')}</span>
+      <div class="map-mid">
+        <span class="map-name ${phDone(p.id)?'done':''}">${p.name}</span>
+        <span class="tag ${p.tag}">${p.tag}</span>
+      </div>
+      <div class="map-bar"><span style="width:${pct}%"></span></div>
+    </div>`;
+  }).join('');
+}
+
+function renderPhases() {
+  const el = document.getElementById('phases');
+  el.innerHTML = PHASES.map(p => {
+    const s = ph(p.id);
+    return `<div class="phase ${p.tag==='hinge'?'hinge-card':''}">
+      <div class="phase-top">
+        <span class="phase-name"><span class="pn">${String(p.n).padStart(2,'0')}</span>${p.name}</span>
+        <span class="tag ${p.tag}">${p.tag}</span>
+      </div>
+      <div class="phase-blurb">${p.blurb}</div>
+      <div class="res">
+        <div class="res-title">${p.res.ess?'<span class="star">\u2605</span>':''}${p.res.title}</div>
+        <div class="res-src">${p.res.src}</div>
+        <div class="res-why">${p.res.why}</div>
+        <a class="res-link" href="${p.res.link}" target="_blank" rel="noopener">open resource</a>
+      </div>
+      <div class="checks">
+        <span class="chk ${s.consumed?'on':''}" data-phase="${p.id}" data-k="consumed">
+          <span class="box">${s.consumed?'\u2713':''}</span>consumed</span>
+        <span class="chk applied ${s.applied?'on':''}" data-phase="${p.id}" data-k="applied">
+          <span class="box">${s.applied?'\u2713':''}</span>applied</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  el.querySelectorAll('.chk').forEach(c => {
+    c.addEventListener('click', () => {
+      const id = c.dataset.phase, k = c.dataset.k;
+      const cur = ph(id);
+      state.phases[id] = { ...cur, [k]: !cur[k] };
+      save(); renderAll();
+    });
+  });
+}
+
+function renderArtifacts() {
+  const el = document.getElementById('artifacts');
+  el.innerHTML = ARTIFACTS.map(a => {
+    const on = !!state.arts[a.id];
+    return `<div class="art">
+      <div class="art-toggle ${on?'on':''}" data-art="${a.id}" role="checkbox" tabindex="0" aria-checked="${on}">\u2713</div>
+      <div class="art-body">
+        <div class="art-name ${on?'on':''}">${a.name}<span class="art-phase">${a.phase}</span></div>
+        <div class="art-desc">${a.desc}</div>
+      </div>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('.art-toggle').forEach(t => {
+    const toggle = () => { const id = t.dataset.art; state.arts[id] = !state.arts[id]; save(); renderAll(); };
+    t.addEventListener('click', toggle);
+    t.addEventListener('keydown', e => { if(e.key===' '||e.key==='Enter'){ e.preventDefault(); toggle(); } });
+  });
+}
+
+function renderOverall() {
+  const done = PHASES.filter(p => phDone(p.id)).length;
+  const consumed = PHASES.filter(p => ph(p.id).consumed).length;
+  const applied = PHASES.filter(p => ph(p.id).applied).length;
+  document.getElementById('ov-phases').textContent = done + '/9';
+  document.getElementById('ov-consumed').textContent = consumed;
+  document.getElementById('ov-applied').textContent = applied;
+  const totalTicks = PHASES.length * 2;
+  const gotTicks = consumed + applied;
+  document.getElementById('ov-bar').style.width = (gotTicks/totalTicks*100) + '%';
+}
+
+function renderAll() { renderMap(); renderPhases(); renderArtifacts(); renderOverall(); }
+
+document.getElementById('reset').addEventListener('click', () => {
+  if (confirm('Reset all Tier 1 inference progress? This cannot be undone.')) {
+    localStorage.removeItem(STORE);
+    state = loadState();
+    state.phases = {}; state.arts = {};
+    renderAll();
+    document.getElementById('saved').textContent = 'Reset';
+  }
+});
+
+renderAll();
+</script>
+</body>
+</html>
