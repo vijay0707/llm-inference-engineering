@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic AI Roadmap — Reliability Track</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #101319;
+    --surface: #171b24;
+    --surface-2: #1d2230;
+    --line: #2a3040;
+    --line-soft: #222736;
+    --text: #e7eaf0;
+    --muted: #8b93a5;
+    --faint: #5c6478;
+
+    --foundations: #4fb8c4;   /* teal */
+    --patterns:    #9b8cf0;   /* violet */
+    --spike:       #f0b429;   /* gold — the bet */
+    --production:  #5cc98a;   /* green */
+
+    --radius: 6px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--ink);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 24px 96px;
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    padding: 64px 0 40px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .kicker {
+    font-family: 'Space Grotesk', sans-serif;
+    color: var(--spike);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    font-size: 14px;
+    margin: 0 0 12px;
+  }
+  h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: clamp(30px, 5vw, 46px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0 0 16px;
+  }
+  .lede {
+    color: var(--muted);
+    max-width: 62ch;
+    font-size: 16px;
+    margin: 0;
+  }
+  .lede strong { color: var(--text); font-weight: 600; }
+
+  /* ---------- Progress instrument ---------- */
+  .instrument {
+    margin-top: 40px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 24px 26px;
+  }
+  .instrument-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .instrument-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .readout {
+    font-family: 'Space Grotesk', sans-serif;
+    font-variant-numeric: tabular-nums;
+    font-size: 15px;
+    color: var(--text);
+  }
+  .readout .pct { color: var(--spike); font-weight: 600; }
+
+  /* segmented phase track */
+  .track {
+    display: grid;
+    grid-template-columns: 5fr 5fr 4fr 5fr;
+    gap: 6px;
+  }
+  .seg { }
+  .seg-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11.5px;
+    color: var(--faint);
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .seg-name b { color: var(--muted); font-weight: 500; }
+  .seg-bar {
+    height: 8px;
+    border-radius: 3px;
+    background: var(--surface-2);
+    overflow: hidden;
+    position: relative;
+  }
+  .seg-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 3px;
+    transition: width 0.6s cubic-bezier(.2,.7,.2,1);
+  }
+  .seg[data-phase="f"] .seg-fill { background: var(--foundations); }
+  .seg[data-phase="p"] .seg-fill { background: var(--patterns); }
+  .seg[data-phase="s"] .seg-fill { background: var(--spike); }
+  .seg[data-phase="r"] .seg-fill { background: var(--production); }
+
+  .reset-row { margin-top: 16px; text-align: right; }
+  .reset-btn {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12.5px;
+    padding: 5px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: border-color .15s, color .15s;
+  }
+  .reset-btn:hover { border-color: var(--faint); color: var(--text); }
+  .reset-btn:focus-visible { outline: 2px solid var(--spike); outline-offset: 2px; }
+
+  /* ---------- Phase sections ---------- */
+  .phase { padding-top: 56px; }
+  .phase-head {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+  .phase-tag {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    color: var(--ink);
+  }
+  .phase[data-phase="f"] .phase-tag { background: var(--foundations); }
+  .phase[data-phase="p"] .phase-tag { background: var(--patterns); }
+  .phase[data-phase="s"] .phase-tag { background: var(--spike); }
+  .phase[data-phase="r"] .phase-tag { background: var(--production); }
+  .phase[data-phase="x"] .phase-tag { background: var(--line); color: var(--muted); }
+
+  .phase h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 24px;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+  .phase-weeks {
+    font-family: 'Space Grotesk', sans-serif;
+    font-variant-numeric: tabular-nums;
+    color: var(--faint);
+    font-size: 14px;
+  }
+  .phase-note {
+    color: var(--muted);
+    margin: 10px 0 22px;
+    max-width: 72ch;
+    font-size: 14.5px;
+  }
+  .phase-note em { color: var(--text); font-style: normal; font-weight: 600; }
+
+  /* spike gets a heavier frame — it's the differentiator */
+  .phase.is-spike .rows {
+    border: 1px solid rgba(240,180,41,0.35);
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, rgba(240,180,41,0.05), rgba(240,180,41,0.01));
+  }
+
+  /* ---------- Rows ---------- */
+  .rows {
+    border-top: 1px solid var(--line-soft);
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 26px 1.15fr 1fr 0.95fr;
+    gap: 18px;
+    padding: 15px 16px 15px 12px;
+    border-bottom: 1px solid var(--line-soft);
+    align-items: start;
+  }
+  .phase:not(.is-spike) .rows .row:first-child { border-top: none; }
+
+  .row .cb {
+    margin-top: 2px;
+    position: relative;
+  }
+  .row input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border: 1.5px solid var(--faint);
+    border-radius: 4px;
+    background: var(--surface);
+    cursor: pointer;
+    display: grid;
+    place-content: center;
+    transition: border-color .15s, background .15s;
+  }
+  .row input[type="checkbox"]:hover { border-color: var(--muted); }
+  .row input[type="checkbox"]:focus-visible { outline: 2px solid var(--spike); outline-offset: 2px; }
+  .row input[type="checkbox"]::after {
+    content: "";
+    width: 10px; height: 10px;
+    border-radius: 2px;
+    transform: scale(0);
+    transition: transform .15s cubic-bezier(.3,1.4,.5,1);
+  }
+  .row input[type="checkbox"]:checked::after { transform: scale(1); }
+  .phase[data-phase="f"] input:checked { border-color: var(--foundations); }
+  .phase[data-phase="f"] input:checked::after { background: var(--foundations); }
+  .phase[data-phase="p"] input:checked { border-color: var(--patterns); }
+  .phase[data-phase="p"] input:checked::after { background: var(--patterns); }
+  .phase[data-phase="s"] input:checked { border-color: var(--spike); }
+  .phase[data-phase="s"] input:checked::after { background: var(--spike); }
+  .phase[data-phase="r"] input:checked { border-color: var(--production); }
+  .phase[data-phase="r"] input:checked::after { background: var(--production); }
+
+  .topic b {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .topic span { color: var(--muted); font-size: 13.5px; }
+
+  .res {
+    font-size: 13.5px;
+    color: var(--text);
+  }
+  .res .anchor {
+    display: inline-block;
+    margin-top: 5px;
+    font-size: 11.5px;
+    color: var(--spike);
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  .task {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .task .wk {
+    font-family: 'Space Grotesk', sans-serif;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .row.done .topic b,
+  .row.done .topic span,
+  .row.done .res,
+  .row.done .task { opacity: 0.4; text-decoration: line-through; text-decoration-color: var(--faint); }
+  .row.done .res .anchor { text-decoration: none; }
+
+  .col-head {
+    display: grid;
+    grid-template-columns: 26px 1.15fr 1fr 0.95fr;
+    gap: 18px;
+    padding: 0 16px 10px 12px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11.5px;
+    color: var(--faint);
+  }
+
+  /* gate callout */
+  .gate {
+    margin-top: 18px;
+    padding: 12px 16px;
+    border-left: 3px solid var(--spike);
+    background: var(--surface);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    font-size: 13.5px;
+    color: var(--muted);
+  }
+  .gate b { color: var(--text); font-family: 'Space Grotesk', sans-serif; font-weight: 600; }
+
+  /* deferred */
+  .phase.is-deferred { opacity: 0.9; }
+  .phase.is-deferred .rows { border: 1px dashed var(--line); border-radius: var(--radius); }
+  .phase.is-deferred .row { grid-template-columns: 1fr 1fr 0.9fr; padding-left: 16px; }
+  .defer-head { grid-template-columns: 1fr 1fr 0.9fr; padding-left: 16px; }
+  .phase.is-deferred .topic b { color: var(--muted); }
+
+  /* ---------- Rules footer ---------- */
+  .rules {
+    margin-top: 72px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  .rule {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+  }
+  .rule h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px;
+    margin: 0 0 8px;
+    color: var(--spike);
+  }
+  .rule p { margin: 0; color: var(--muted); font-size: 14px; }
+  .rule code {
+    font-family: 'Space Grotesk', sans-serif;
+    background: var(--surface-2);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--text);
+    font-size: 13px;
+  }
+
+  footer.foot {
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line-soft);
+    color: var(--faint);
+    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  @media (max-width: 720px) {
+    .row, .col-head { grid-template-columns: 24px 1fr; }
+    .row .res, .row .task, .col-head span:nth-child(3), .col-head span:nth-child(4) { grid-column: 2; }
+    .row .res { padding-top: 4px; }
+    .col-head span:nth-child(3), .col-head span:nth-child(4) { display: none; }
+    .track { grid-template-columns: 1fr 1fr; }
+    .rules { grid-template-columns: 1fr; }
+    .phase.is-deferred .row, .defer-head { grid-template-columns: 1fr; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="kicker">Agentic AI · Reliability Engineering Track</p>
+    <h1>From LLM apps to agents you can operate</h1>
+    <p class="lede">24 weeks at ~7 hrs/week. Anchor project: a <strong>pipeline failure triage agent</strong>. The spike is <strong>agent reliability</strong> — evals and observability — because knowing an agent works is the skill that's hard to hire for. Every topic below has a home in the project. Check items as you apply them.</p>
+
+    <div class="instrument" aria-label="Progress instrument">
+      <div class="instrument-top">
+        <span class="instrument-label">Progress by phase</span>
+        <span class="readout"><span id="done-count">0</span> / <span id="total-count">0</span> applied · <span class="pct" id="pct">0%</span></span>
+      </div>
+      <div class="track">
+        <div class="seg" data-phase="f"><div class="seg-name"><span>Foundations</span><b>W1–5</b></div><div class="seg-bar"><div class="seg-fill" data-seg="f"></div></div></div>
+        <div class="seg" data-phase="p"><div class="seg-name"><span>Patterns</span><b>W6–10</b></div><div class="seg-bar"><div class="seg-fill" data-seg="p"></div></div></div>
+        <div class="seg" data-phase="s"><div class="seg-name"><span>Evals spike</span><b>W6–14</b></div><div class="seg-bar"><div class="seg-fill" data-seg="s"></div></div></div>
+        <div class="seg" data-phase="r"><div class="seg-name"><span>Production</span><b>W15–24</b></div><div class="seg-bar"><div class="seg-fill" data-seg="r"></div></div></div>
+      </div>
+      <div class="reset-row"><button class="reset-btn" id="reset">Reset progress</button></div>
+    </div>
+  </header>
+
+  <!-- PHASE 1 -->
+  <section class="phase" data-phase="f" id="p-foundations">
+    <div class="phase-head">
+      <span class="phase-tag">Phase 1</span>
+      <h2>Foundations</h2>
+      <span class="phase-weeks">Weeks 1–5</span>
+    </div>
+    <p class="phase-note">Strip away frameworks first. Build the agent loop in raw Python + the API so the abstractions never hide anything from you. <em>Gate:</em> you can explain every line of your loop without opening docs.</p>
+    <div class="col-head"><span></span><span>Topic</span><span>Resource</span><span>Where you learn it</span></div>
+    <div class="rows" data-rows></div>
+    <div class="gate"><b>Anchor read:</b> "Building Effective Agents" (Anthropic) — twice, Week 1 and Week 5. It reads differently once you've built the loop.</div>
+  </section>
+
+  <!-- PHASE 2 PATTERNS -->
+  <section class="phase" data-phase="p" id="p-patterns">
+    <div class="phase-head">
+      <span class="phase-tag">Phase 2</span>
+      <h2>Control Flow &amp; Patterns</h2>
+      <span class="phase-weeks">Weeks 6–10</span>
+    </div>
+    <p class="phase-note">Adopt LangGraph — one framework, committed. Don't re-evaluate frameworks until Week 24. Your DE background pays off most in state and checkpointing.</p>
+    <div class="col-head"><span></span><span>Topic</span><span>Resource</span><span>Where you learn it</span></div>
+    <div class="rows" data-rows></div>
+  </section>
+
+  <!-- PHASE 2 SPIKE -->
+  <section class="phase is-spike" data-phase="s" id="p-spike">
+    <div class="phase-head">
+      <span class="phase-tag">Phase 2 · Spike</span>
+      <h2>Evaluation &amp; Reliability</h2>
+      <span class="phase-weeks">Weeks 6–14</span>
+    </div>
+    <p class="phase-note">This block has the most topics on purpose — it's the hireable, rare skill and your entire differentiation. Reliability is wired in from the first trace you log, which is why some tasks start back in Week 2. <em>Gate:</em> you can state your pass rate, your worst failure category, and what you changed to improve it.</p>
+    <div class="col-head"><span></span><span>Topic</span><span>Resource</span><span>Where you learn it</span></div>
+    <div class="rows" data-rows></div>
+    <div class="gate"><b>Anchor read:</b> "Demystifying Evals for AI Agents" (Anthropic) — three times: Week 6, Week 13, Week 22. Closest thing to a syllabus for this specialization.</div>
+  </section>
+
+  <!-- PHASE 3 -->
+  <section class="phase" data-phase="r" id="p-production">
+    <div class="phase-head">
+      <span class="phase-tag">Phase 3</span>
+      <h2>Production &amp; Security</h2>
+      <span class="phase-weeks">Weeks 15–24</span>
+    </div>
+    <p class="phase-note">Deploy something people actually use, then convert the work into public artifacts. A regression caught by your evals before you noticed it manually is the moment the whole plan has paid off.</p>
+    <div class="col-head"><span></span><span>Topic</span><span>Resource</span><span>Where you learn it</span></div>
+    <div class="rows" data-rows></div>
+    <div class="gate"><b>Long read across the phase:</b> Chip Huyen, <em>AI Engineering</em> — one chapter per week, W20–24. It lands better once you have scars.</div>
+  </section>
+
+  <!-- DEFERRED -->
+  <section class="phase is-deferred" data-phase="x" id="p-deferred">
+    <div class="phase-head">
+      <span class="phase-tag">Deferred</span>
+      <h2>Deliberately not now</h2>
+    </div>
+    <p class="phase-note">No resources listed, because the right move is not to start. If you find yourself opening a multi-agent tutorial "just to understand it," that's the trap firing.</p>
+    <div class="col-head defer-head"><span>Topic</span><span>Why deferred</span><span>When to revisit</span></div>
+    <div class="rows" data-defer></div>
+  </section>
+
+  <div class="rules">
+    <div class="rule">
+      <h3>One resource per week</h3>
+      <p>Maximum. Tied to what you're building that week. If a week's build is going well, skip the resource entirely — building beats reading every time.</p>
+    </div>
+    <div class="rule">
+      <h3>Consumed isn't applied</h3>
+      <p>A row is only "done" when you can name the line of code or design decision it changed: <code>consumed → applied</code>. Anything stuck at consumed for two weeks gets deleted.</p>
+    </div>
+  </div>
+
+  <footer class="foot">
+    <span>Progress saves in this browser.</span>
+    <span>Milestone gates — W5: loop works · W14: evals in CI · W24: deployed + 6 posts</span>
+  </footer>
+
+</div>
+
+<script>
+  const DATA = {
+    f: [
+      ["Tool / function calling semantics", "schemas, the tool_use block, parallel vs sequential", "Anthropic tool use docs — read end to end", null, "W1 — define 3 tool schemas, parse tool_use"],
+      ["Structured output & Pydantic validation", "forcing typed, reliable returns", "Pydantic AI docs + Cookbook structured-output notebook", null, "W2 — verdict as a validated model"],
+      ["The agent loop", "reason → act → observe → repeat, and how to terminate", "\u201CBuilding Effective Agents\u201D (blog + talk)", "anchor W1 / W5", "W1 — hand-write the loop"],
+      ["Termination & iteration control", "hard caps, stop conditions, runaway prevention", "Same — the workflow-vs-agent section", null, "W1 — hard-cap at 5 iterations"],
+      ["Prompt structure for agents", "system vs task framing, tool descriptions as prompts", "Anthropic prompt engineering docs", null, "W2 — tune tool descriptions, watch behavior"],
+      ["Context management", "what goes in the window, what gets truncated", "\u201CEffective Context Engineering\u201D (skim now)", null, "W2 — decide what history to keep"],
+      ["Error handling for LLM calls", "timeouts, retries, backoff, partial failures", "Anthropic SDK retry docs + your DE instincts", null, "W2 — timeouts, backoff, token ceiling"],
+      ["MCP (Model Context Protocol)", "servers, tool exposure, client/server split", "MCP spec + Python SDK docs", null, "W4–5 — build one MCP server"]
+    ],
+    p: [
+      ["ReAct pattern", "interleaved reasoning and action", "LangGraph docs — prebuilt ReAct agent", null, "W6 — port your loop to LangGraph"],
+      ["Planner-executor", "separating decide-the-plan from do-the-steps", "LangGraph multi-step / subgraph docs", null, "W7 — split plan from steps"],
+      ["Reflection / self-critique", "agent evaluating its own output before returning", "\u201CBuilding Effective Agents\u201D reflection section", null, "W8 — add a critique pass"],
+      ["Routing & orchestration", "when to branch, when to hand off", "LangGraph conditional-edges docs", null, "W7 — branch on failure type"],
+      ["State management & checkpointing", "durable state, resuming after failure", "LangGraph persistence docs \u2014 your DE edge", null, "W6 — resume after crash"],
+      ["Human-in-the-loop", "interrupts, approval gates before consequential actions", "LangGraph HITL docs + LangChain YouTube", null, "W8 — approval gate before writes"],
+      ["Memory", "short-term vs long-term, what persists across runs", "LangGraph memory docs", null, "W9 — persist known-incident patterns"],
+      ["Workflow vs agent", "how much autonomy to actually grant", "\u201CBuilding Effective Agents\u201D \u2014 the core thesis", null, "Ongoing — resist over-autonomy"]
+    ],
+    s: [
+      ["Failure mode analysis", "categorizing how and why agents break", "Hamel Husain \u2014 error analysis (hamel.dev)", null, "W2 / W6 — taxonomy from real traces"],
+      ["Golden datasets", "building test cases from ground truth", "\u201CDemystifying Evals\u201D \u2014 read #1", "anchor W6/13/22", "W3 — 20 cases from history"],
+      ["Outcome vs trajectory eval", "right answer vs right path", "\u201CDemystifying Evals\u201D \u2014 central distinction", null, "W3 — score answer and path"],
+      ["Deterministic assertions", "programmatic checks that need no model", "LLM Evals FAQ (Hamel & Shreya)", null, "W3 — category check in code"],
+      ["LLM-as-judge & its failure modes", "design, calibration, style bias, non-determinism", "LLM Evals FAQ + Phoenix judge-bias docs", null, "W3 — judge the summary quality"],
+      ["Per-span scoring", "each step, not just final output", "Laurie Voss \u2014 \u201CFrom Vibes to Production\u201D (AIE 2026)", null, "W10 — score each step"],
+      ["pass@k vs pass^k", "reliability under repeated runs", "\u201CDemystifying Evals\u201D \u2014 reliability section", null, "W13 — measure run stability"],
+      ["Judge validation", "checking your judge against human labels", "LLM Evals FAQ \u2014 calibration", null, "W7 — judge vs your own labels"],
+      ["Regression testing in CI", "evals that gate every change", "Braintrust GitHub Actions docs", null, "W4 / W14 — evals gate every PR"],
+      ["Tracing & observability", "capturing and reading full execution traces", "Langfuse / Braintrust / Phoenix \u2014 pick one", null, "W10 — full trace dashboard"],
+      ["Cost & latency budgeting", "token accounting, per-run ceilings", "Observability docs + W&B eval pipeline", null, "W11 — per-run token ceiling"],
+      ["Drift detection", "catching silent degradation after changes", "Cameron Wolfe agent-eval guide", null, "W12 — catch silent regressions"]
+    ],
+    r: [
+      ["Deployment patterns", "scheduled, event-triggered, long-running", "LangGraph deployment docs + Cloud Run exp.", null, "W15 — scheduled/triggered run"],
+      ["Context engineering", "deliberate construction of what the agent sees", "\u201CEffective Context Engineering\u201D (Anthropic)", null, "W15 — deliberate window build"],
+      ["Long-running agent harnesses", "managing agents that run for extended periods", "\u201CEffective Harnesses for Long-Running Agents\u201D", null, "W16 — manage extended runs"],
+      ["Prompt injection & defenses", "the top agent security threat", "OWASP Top 10 for LLM Applications", null, "W17 — injection tests in evals"],
+      ["Tool permission boundaries", "least-privilege, sandboxing write actions", "OWASP + Promptfoo docs", null, "W18 — sandbox writes"],
+      ["Failure taxonomy from prod logs", "real breakage, not imagined", "Your own logs \u2014 no external resource", null, "W19 — taxonomy from real logs"],
+      ["Guardrails & validation layers", "input / output safety checks", "Promptfoo red-team docs + AIE security talk", null, "W18–19 — safety checks"]
+    ]
+  };
+
+  const DEFER = [
+    ["Multi-agent orchestration", "Pulls bandwidth from the spike; low compounding now", "After Week 24, if a project demands it"],
+    ["Fine-tuning / RL for agents", "Different discipline; off the reliability path", "Only if you pivot toward training"],
+    ["Voice & vision agents", "Application breadth, not depth", "Never, unless a product needs it"],
+    ["Building your own framework", "The #1 procrastination trap for your instincts", "Never build for its own sake"],
+    ["Advanced RAG architectures", "You already have the RAG foundation", "Don't gold-plate what works"]
+  ];
+
+  const STORE_KEY = "agentic-roadmap-v1";
+  let state = {};
+  try { state = JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { state = {}; }
+  function persist() { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {} }
+
+  const sections = document.querySelectorAll('.phase[data-phase="f"], .phase[data-phase="p"], .phase[data-phase="s"], .phase[data-phase="r"]');
+  sections.forEach(sec => {
+    const key = sec.getAttribute('data-phase');
+    const holder = sec.querySelector('[data-rows]');
+    DATA[key].forEach((item, i) => {
+      const id = key + i;
+      const [topic, desc, res, anchor, task] = item;
+      const row = document.createElement('div');
+      row.className = 'row';
+      row.innerHTML =
+        '<div class="cb"><input type="checkbox" id="' + id + '" aria-label="Applied: ' + topic + '"></div>' +
+        '<div class="topic"><b>' + topic + '</b><span>' + desc + '</span></div>' +
+        '<div class="res">' + res + (anchor ? '<span class="anchor">' + anchor + '</span>' : '') + '</div>' +
+        '<div class="task"><span class="wk">' + task.split(' \u2014 ')[0] + '</span> \u2014 ' + task.split(' \u2014 ').slice(1).join(' \u2014 ') + '</div>';
+      holder.appendChild(row);
+      const cb = row.querySelector('input');
+      cb.checked = !!state[id];
+      if (cb.checked) row.classList.add('done');
+      cb.addEventListener('change', () => {
+        state[id] = cb.checked;
+        row.classList.toggle('done', cb.checked);
+        persist();
+        recompute();
+      });
+    });
+  });
+
+  const dh = document.querySelector('[data-defer]');
+  DEFER.forEach(d => {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = '<div class="topic"><b>' + d[0] + '</b></div><div class="res">' + d[1] + '</div><div class="task">' + d[2] + '</div>';
+    dh.appendChild(row);
+  });
+
+  const totals = { f: DATA.f.length, p: DATA.p.length, s: DATA.s.length, r: DATA.r.length };
+  const grandTotal = totals.f + totals.p + totals.s + totals.r;
+  document.getElementById('total-count').textContent = grandTotal;
+
+  function recompute() {
+    let done = 0;
+    ['f','p','s','r'].forEach(k => {
+      let c = 0;
+      for (let i = 0; i < totals[k]; i++) if (state[k + i]) c++;
+      done += c;
+      const fill = document.querySelector('.seg-fill[data-seg="' + k + '"]');
+      fill.style.width = (totals[k] ? (c / totals[k] * 100) : 0) + '%';
+    });
+    document.getElementById('done-count').textContent = done;
+    document.getElementById('pct').textContent = Math.round(done / grandTotal * 100) + '%';
+  }
+
+  document.getElementById('reset').addEventListener('click', () => {
+    state = {};
+    persist();
+    document.querySelectorAll('.row input[type="checkbox"]').forEach(cb => { cb.checked = false; cb.closest('.row').classList.remove('done'); });
+    recompute();
+  });
+
+  // fill bars on load (one orchestrated moment)
+  requestAnimationFrame(() => requestAnimationFrame(recompute));
+</script>
+</body>
+</html>
